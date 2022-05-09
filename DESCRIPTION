@@ -1,0 +1,35 @@
+Package: APJaccard
+Title: Functions that assist using Jaccard similarity with AP clustering
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Andrew",
+           family = "Howe",
+           role = c("aut", "cre"),
+           email = "arh2207@columbia.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Functions that assist using Jaccard similarity with AP clustering
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports:
+  cluster,
+  ggplot2,
+  devtools,
+  Seurat,
+  pheatmap,
+  BiocManager,
+  RColorBrewer,
+  stringr,
+  apcluster,
+  igraph,
+  Matrix,
+  tidyverse,
+  mcclust,
+  philentropy
+RoxygenNote: 7.1.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
