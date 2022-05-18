@@ -8,7 +8,7 @@ nearest neighbors. Can also return nmis for these solutions and the similarity
 matrices from which they were calculated}
 \usage{
 APJaccardSimKRange(
-  data.obj,
+  data.dist,
   transformation = "default",
   APq = 0,
   kmin = 5,
@@ -19,24 +19,24 @@ APJaccardSimKRange(
 )
 }
 \arguments{
-\item{data.obj}{a Seurat object containing cells to be clustered which has had pca reduction performed on it}
+\item{data.dist}{a distance matrix on which to calculate nearest neighbors}
 
-\item{transformation}{a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similairty matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values}
+\item{transformation}{a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similarity matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values}
 
-\item{APq}{a number between 0 and 1 which indicates the quantile of the data to use to diagonalize the similarity matrix before running AP clustering}
+\item{APq}{a number between 0 and 1 which indicates the quantile of the data to use to diagonalize the similarity matrix before running AP clustering.  Increase if too few clusters.}
 
-\item{kmin}{the number of neighbors for which to calculate the first Jaccard matrix}
+\item{kmin}{the number of neighbors on which to calculate the first Jaccard matrix}
 
-\item{kmax}{the number of neighbors for which to caluclate the last Jaccard matrix}
+\item{kmax}{the number of neighbors on which to calculate the last Jaccard matrix}
 
-\item{kstep}{the number of neighbors to increase by for each calculation of a new Jaccard matrix}
+\item{kstep}{the number of neighbors to iterate for each calculation of a new Jaccard matrix}
 
-\item{save.simmats}{a boolean indicating whether or not to return the Jacccard similarity matrices along with the AP clustering solutions}
+\item{save.simmats}{a Boolean indicating whether or not to return the Jaccard similarity matrices along with the AP clustering solutions.}
 
-\item{target.clust.vec}{a named vector of cluster assignments for the cells in the Seurat object. If given the function returns the nmi values for the AP solutions for each Jaccard matrix when compared with this target vector. If null, the function returns no nmi values}
+\item{target.clust.vec}{a named vector of cluster assignments for the cells/samples in the distance matrix. If given, the function returns the NMI values for the AP solutions for each Jaccard matrix when compared with this target vector. If null, the function returns no NMI values}
 }
 \value{
-a list containing the AP clustering solutions for all the variations of the Jaccard matrix and, if there is a target vector given, the nmi values for these solutions compared with the target vector and, if save.simmat=TRUE, the similarity matrix which resulted in each AP solution
+a list containing the AP clustering solutions for all the variations of the Jaccard matrix and, if there is a target vector given, the NMI values for these solutions compared with the target vector and, if save.simmat=TRUE, the similarity matrix which resulted in each AP solution
 }
 \description{
 A function which finds the clustering solutions for cells in a Seurat object 

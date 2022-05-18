@@ -90,16 +90,18 @@ scoreAPTest <- function(bigresult, assignments, SHUTUP = TRUE) {
   return(nmis)
 }
 
-#' A function that calculates a trnasformed Jaccard similarity matrix for the cells in a Seurat object
+#' A function that calculates a transformed Jaccard similarity matrix for the cells in a Seurat object.
+#' tanh with k=280 performed the best (outperformed Louvain) in one example
+#' with an annotated data set.
 #' 
-#' @param object a Seurat object which has had a pca reduction performed on it
+#' @param data.dist a distance matrix on which to use FindNeighbors
 #' @param k an integer representing the number of neighbors which will be found for each cell
-#' @param transformation a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similairty matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values
-#' @return an nxn matrix where n is the number of cells in the Seurat object and the matrix contians the transformed Jaccard values for all pairs of cells 
+#' @param transformation a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similarity matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values
+#' @return an NxN matrix where N is the number of cells, and the matrix contains the transformed Jaccard values for all pairs of cells 
 #' @export 
-FindJaccardMatrix <- function(object, k = 5, transformation = 'default'){
-  object <- FindNeighbors(object, k = k, verbose=FALSE, reduction='pca', dims=1:30)
-  mat <- as.matrix(object$SCT_snn)
+JaccardSimTransform <- function(data.dist, k = 5, transformation = 'default'){
+  data.jaccard <- FindNeighbors(data.dist, k = k, verbose=TRUE)
+  mat <- as.matrix(data.jaccard$snn)
   if (is.null(transformation)){
     return(mat)
   } else if(transformation == 'log'){
@@ -142,17 +144,17 @@ FindJaccardMatrix <- function(object, k = 5, transformation = 'default'){
 #' nearest neighbors. Can also return nmis for these solutions and the similarity 
 #' matrices from which they were calculated
 #' 
-#' @param data.obj a Seurat object containing cells to be clustered which has had pca reduction performed on it
-#' @param transformation a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similairty matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values
-#' @param APq a number between 0 and 1 which indicates the quantile of the data to use to diagonalize the similarity matrix before running AP clustering
-#' @param kmin the number of neighbors for which to calculate the first Jaccard matrix
-#' @param kmax the number of neighbors for which to caluclate the last Jaccard matrix
-#' @param kstep the number of neighbors to increase by for each calculation of a new Jaccard matrix
-#' @param target.clust.vec a named vector of cluster assignments for the cells in the Seurat object. If given the function returns the nmi values for the AP solutions for each Jaccard matrix when compared with this target vector. If null, the function returns no nmi values
-#' @param save.simmats a boolean indicating whether or not to return the Jacccard similarity matrices along with the AP clustering solutions
-#' @return a list containing the AP clustering solutions for all the variations of the Jaccard matrix and, if there is a target vector given, the nmi values for these solutions compared with the target vector and, if save.simmat=TRUE, the similarity matrix which resulted in each AP solution
+#' @param data.dist a distance matrix on which to calculate nearest neighbors
+#' @param transformation a character vector indicating the type of transformation the similarity matrix will go through before being returned. By default the similarity matrix will be returned with no transformation. Other possible values include log (returns matrix which has been log transformed), 'inverse' returns a shifted inverse of the matrix, 'stretch' returns a linear scaling of the matrix, 'tan' returns the tangent of matrix values, and 'tanh' returns the hyperbolic tangent of matrix values
+#' @param APq a number between 0 and 1 which indicates the quantile of the data to use to diagonalize the similarity matrix before running AP clustering.  Increase if too few clusters.
+#' @param kmin the number of neighbors on which to calculate the first Jaccard matrix
+#' @param kmax the number of neighbors on which to calculate the last Jaccard matrix
+#' @param kstep the number of neighbors to iterate for each calculation of a new Jaccard matrix
+#' @param target.clust.vec a named vector of cluster assignments for the cells/samples in the distance matrix. If given, the function returns the NMI values for the AP solutions for each Jaccard matrix when compared with this target vector. If null, the function returns no NMI values
+#' @param save.simmats a Boolean indicating whether or not to return the Jaccard similarity matrices along with the AP clustering solutions.
+#' @return a list containing the AP clustering solutions for all the variations of the Jaccard matrix and, if there is a target vector given, the NMI values for these solutions compared with the target vector and, if save.simmat=TRUE, the similarity matrix which resulted in each AP solution
 #' @export 
-APJaccardSimKRange <- function(data.obj, transformation = 'default', APq = 0, 
+APJaccardSimKRange <- function(data.dist, transformation = 'default', APq = 0, 
                              kmin = 5, kmax = 50, kstep = 5, target.clust.vect= NULL,
                              save.simmats = FALSE) {
   if (is.null(target.clust.vect)) {
@@ -172,7 +174,7 @@ APJaccardSimKRange <- function(data.obj, transformation = 'default', APq = 0,
   while (k <= kmax) {
     print(paste("Generating Jaccard similarity matrix with transformation: ", transformation, "; k = ", k, "...", sep = ''))
     # Generate cluster and score based on NMI
-    sim.mat <- FindJaccardMatrix(data.obj, k, transformation)
+    sim.mat <- JaccardSimTransform(data.dist, k, transformation)
     clust.vec <- APResultToVec(apcluster(sim.mat, q=APq))
     if (has.target) {
       nmi.score <- FindNMI(target.clust.vect, clust.vec)
